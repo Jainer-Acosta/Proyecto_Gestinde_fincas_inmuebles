@@ -305,7 +305,7 @@ public class UnidadInmuebleDAO {
 
         String sql = """
                 UPDATE unidad_inmueble
-                SET estado='NO_DISPONIBLE'
+                SET estado='NO DISPONIBLE'
                 WHERE id=?
                 """;
 

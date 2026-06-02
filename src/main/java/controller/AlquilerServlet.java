@@ -13,7 +13,6 @@ import model.dao.AlquilerDAO;
 import model.dao.InquilinoDAO;
 
 import model.entity.Alquiler;
-import model.entity.Inquilino;
 
 import java.io.IOException;
 
@@ -31,204 +30,95 @@ import model.dao.UnidadInmuebleDAO;
 @WebServlet("/alquiler")
 public class AlquilerServlet extends HttpServlet {
 
-    private final AlquilerDAO alquilerDAO =
-            new AlquilerDAO();
-
-
-    private final InquilinoDAO inquilinoDAO =
-            new InquilinoDAO();
-    
-    private final UnidadInmuebleDAO unidadDAO =
-        new UnidadInmuebleDAO();
+    private final AlquilerDAO alquilerDAO = new AlquilerDAO();
+    private final InquilinoDAO inquilinoDAO = new InquilinoDAO();
+    private final UnidadInmuebleDAO unidadDAO = new UnidadInmuebleDAO();
 
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String accion =
-                request.getParameter(
-                        "accion"
-                );
+        String accion = request.getParameter("accion");
 
         if (accion == null) {
-
-            accion = "nuevo";
+            accion = "listar";
         }
 
         switch (accion) {
-
             case "nuevo":
-
-                mostrarFormulario(
-                        request,
-                        response
-                );
-
+                mostrarFormulario(request, response);
                 break;
-                
-                
             case "listar":
-
                 listar(request, response);
-
                 break;
-
-            case "finalizar":
-
-                finalizar(request, response);
-
+            case "desalquilar":
+                desalquilar(request, response);
                 break;
         }
-        
-        
     }
 
     @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String accion =
-                request.getParameter(
-                        "accion"
-                );
+        String accion = request.getParameter("accion");
 
         switch (accion) {
-
             case "guardar":
-
                 guardar(request, response);
-
                 break;
         }
     }
 
-    private void mostrarFormulario(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void mostrarFormulario(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        List<Inquilino> inquilinos =
-                inquilinoDAO.listar();
+        List<model.entity.Inquilino> inquilinos = inquilinoDAO.listar();
+        List<Object[]> unidades = unidadDAO.listarDisponibles();
 
-        List<Object[]> unidades =
-                unidadDAO.listarDisponibles();
+        request.setAttribute("inquilinos", inquilinos);
+        request.setAttribute("unidades", unidades);
 
-        request.setAttribute(
-                "inquilinos",
-                inquilinos
-        );
-
-        request.setAttribute(
-                "unidades",
-                 unidades
-        );
-
-        request.getRequestDispatcher(
-                "views/alquiler/registrar.jsp"
-        ).forward(request, response);
+        request.getRequestDispatcher("views/alquiler/registrar.jsp").forward(request, response);
     }
 
-    private void guardar(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    private void guardar(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        Alquiler alquiler =
-                new Alquiler();
+        Alquiler alquiler = new Alquiler();
 
-        alquiler.setInquilinoId(
-                Integer.parseInt(
-                        request.getParameter(
-                                "inquilinoId"
-                        )
-                )
-        );
+        alquiler.setInquilinoId(Integer.parseInt(request.getParameter("inquilinoId")));
+        alquiler.setUnidadInmuebleId(Integer.parseInt(request.getParameter("unidadId")));
+        alquiler.setFechaInicio(Date.valueOf(request.getParameter("fechaInicio")));
 
-        alquiler.setUnidadInmuebleId(
-                Integer.parseInt(
-                        request.getParameter(
-                                "unidadId"
-                        )
-                )
-        );
-
-        alquiler.setFechaInicio(
-                Date.valueOf(
-                        request.getParameter(
-                                "fechaInicio"
-                        )
-                )
-        );
-
-        String fechaFin =
-                request.getParameter(
-                        "fechaFin"
-                );
-
+        String fechaFin = request.getParameter("fechaFin");
         if (!fechaFin.isEmpty()) {
-
-            alquiler.setFechaFin(
-                    Date.valueOf(fechaFin)
-            );
+            alquiler.setFechaFin(Date.valueOf(fechaFin));
         }
 
-        alquiler.setEstado(
-                "ACTIVO"
-        );
+        alquiler.setEstado("ACTIVO");
 
         alquilerDAO.guardar(alquiler);
 
-        response.sendRedirect(
-            "alquiler?accion=listar"
-        );
+        response.sendRedirect("alquiler?accion=listar");
     }
     
-    private void listar(
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws ServletException, IOException {
+    private void listar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    List<Object[]> lista =
-            alquilerDAO.listar();
+        List<Object[]> lista = alquilerDAO.listar();
+        request.setAttribute("listaAlquileres", lista);
+        request.getRequestDispatcher("views/alquiler/listar.jsp").forward(request, response);
+    }
 
-    request.setAttribute(
-            "listaAlquileres",
-            lista
-    );
+    private void desalquilar(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
 
-    request.getRequestDispatcher(
-            "views/alquiler/listar.jsp"
-    ).forward(request, response);
-}
+        int id = Integer.parseInt(request.getParameter("id"));
+        int unidadId = Integer.parseInt(request.getParameter("unidadId"));
 
-    private void finalizar(
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws IOException {
+        alquilerDAO.finalizar(id, unidadId);
 
-    int id =
-            Integer.parseInt(
-                    request.getParameter("id")
-            );
-
-    int unidadId =
-            Integer.parseInt(
-                    request.getParameter(
-                            "unidadId"
-                    )
-            );
-
-    alquilerDAO.finalizar(
-            id,
-            unidadId
-    );
-
-    response.sendRedirect(
-            "alquiler?accion=listar"
-    );
-}
+        response.sendRedirect("alquiler?accion=listar");
+    }
 }

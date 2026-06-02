@@ -23,7 +23,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="${pageContext.request.contextPath}/views/dashboard/dashboard.jsp">
-            <i class="bi bi-building me-2"></i>InmoGest
+            <i class="bi bi-building me-2"></i>PGFI
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>

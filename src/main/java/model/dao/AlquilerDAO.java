@@ -107,8 +107,7 @@ public class AlquilerDAO {
     
     public List<Object[]> listar() {
 
-    List<Object[]> lista =
-            new ArrayList<>();
+    List<Object[]> lista = new ArrayList<>();
 
     String sql = """
         SELECT
@@ -121,142 +120,83 @@ public class AlquilerDAO {
             u.letra,
             a.fecha_inicio,
             a.fecha_fin,
-            a.estado
+            a.estado,
+            u.id AS unidad_id
         FROM alquiler a
-
-        INNER JOIN inquilino i
-            ON a.inquilino_id = i.id
-
-        INNER JOIN unidad_inmueble u
-            ON a.unidad_inmueble_id = u.id
-
-        INNER JOIN edificio e
-            ON u.edificio_id = e.id
-
+        INNER JOIN inquilino i ON a.inquilino_id = i.id
+        INNER JOIN unidad_inmueble u ON a.unidad_inmueble_id = u.id
+        INNER JOIN edificio e ON u.edificio_id = e.id
         ORDER BY a.id DESC
         """;
 
-    try (
-            Connection conexion =
-                    Conexion.conectar();
-
-            PreparedStatement ps =
-                    conexion.prepareStatement(sql);
-
-            ResultSet rs =
-                    ps.executeQuery()
-    ) {
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
 
         while (rs.next()) {
-
-            Object[] fila =
-                    new Object[10];
-
-            fila[0] = rs.getInt("id");
-
+            Object[] fila = new Object[11]; // Ahora tiene 11 elementos
+            fila[0] = rs.getInt("id");           // id alquiler
             fila[1] = rs.getString("nombre");
-
             fila[2] = rs.getString("apellido");
-
             fila[3] = rs.getString("edificio");
-
             fila[4] = rs.getString("tipo");
-
             fila[5] = rs.getString("planta");
-
             fila[6] = rs.getString("letra");
-
             fila[7] = rs.getDate("fecha_inicio");
-
             fila[8] = rs.getDate("fecha_fin");
-
             fila[9] = rs.getString("estado");
+            fila[10] = rs.getInt("unidad_id");   // ID de la unidad
             lista.add(fila);
         }
 
     } catch (SQLException e) {
-
-        System.out.println(
-                "Error listando alquileres: "
-                + e.getMessage()
-        );
+        System.out.println("Error listando alquileres: " + e.getMessage());
     }
 
     return lista;
 }
     
-    public boolean finalizar(
-        int id,
-        int unidadId) {
+public boolean finalizar(int id, int unidadId) {
 
-    String sql = """
-            UPDATE alquiler
-            SET estado='FINALIZADO'
-            WHERE id=?
-            """;
+    String sql = "UPDATE alquiler SET estado='FINALIZADO' WHERE id=?";
 
-    try (
-            Connection conexion =
-                    Conexion.conectar();
-
-            PreparedStatement ps =
-                    conexion.prepareStatement(sql)
-    ) {
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sql)) {
 
         ps.setInt(1, id);
+        int filas = ps.executeUpdate();
 
-        int filas =
-                ps.executeUpdate();
-
-        if(filas > 0){
-
-            liberarUnidad(
-                    unidadId
-            );
-
+        if (filas > 0) {
+            liberarUnidad(unidadId);
             return true;
         }
 
     } catch (SQLException e) {
-
-        System.out.println(
-                "Error finalizar alquiler: "
-                + e.getMessage()
-        );
+        System.out.println("Error finalizar alquiler: " + e.getMessage());
     }
 
     return false;
 }
-    
-private void liberarUnidad(
-        int unidadId) {
 
-    String sql = """
-            UPDATE unidad_inmueble
-            SET estado='DISPONIBLE'
-            WHERE id=?
-            """;
+private void liberarUnidad(int unidadId) {
+    String sql = "UPDATE unidad_inmueble SET estado='DISPONIBLE' WHERE id=?";
 
-    try (
-            Connection conexion =
-                    Conexion.conectar();
-
-            PreparedStatement ps =
-                    conexion.prepareStatement(sql)
-    ) {
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sql)) {
 
         ps.setInt(1, unidadId);
-
-        ps.executeUpdate();
+        int filas = ps.executeUpdate();
+        
+        if (filas > 0) {
+            System.out.println("Unidad " + unidadId + " liberada correctamente");
+        } else {
+            System.out.println("No se encontró la unidad con ID: " + unidadId);
+        }
 
     } catch (SQLException e) {
-
-        System.out.println(
-                e.getMessage()
-        );
+        System.out.println("Error liberando unidad: " + e.getMessage());
     }
-}
-    
+}    
     
     public List<Object[]> listarActivos() {
 

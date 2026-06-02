@@ -46,8 +46,8 @@
             
             <div class="card shadow-lg border-0">
                 <div class="card-header bg-warning text-dark py-3">
-                    <h2 class="h4 mb-0">
-                        <i class="bi bi-pencil-square me-2"></i>Editar Recibo #<%= r.getNumeroRecibo() != null ? r.getNumeroRecibo() : r.getId() %>
+                   <h2 class="h4 mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Editar Recibo #<%= r.getNumeroRecibo() != null ? r.getNumeroRecibo() : "Sin número" %>
                     </h2>
                 </div>
                 
@@ -209,7 +209,7 @@
         var luz = parseFloat(document.getElementById('luz').value) || 0;
         var porteria = parseFloat(document.getElementById('porteria').value) || 0;
         var otros = parseFloat(document.getElementById('otros').value) || 0;
-        var ipcPercent = 2,5 ;
+        var ipcPercent = 2.5 ;
         var ivaPercent = 19 ;
         
         // Sumar conceptos personalizados existentes
@@ -261,8 +261,9 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <strong>Número de Recibo:</strong>
-                            <span class="font-monospace"><%= r.getNumeroRecibo() != null ? r.getNumeroRecibo() : "No asignado" %></span>
+                            <strong>Número de Recibo (Único por unidad):</strong>
+                            <span class="font-monospace text-primary fw-bold"><%= r.getNumeroRecibo() != null ? r.getNumeroRecibo() : "Pendiente de generar" %></span>
+                            <br><small class="text-muted">Formato: EDIFICIO-TIPO-PLANTA-LETRA-CORRELATIVO</small>
                         </div>
                         <div class="col-md-6">
                             <strong>Total Actual:</strong>

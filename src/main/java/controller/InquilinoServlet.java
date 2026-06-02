@@ -81,6 +81,12 @@ public class InquilinoServlet extends HttpServlet {
                 reporte(request, response);
 
                 break;
+                
+            case "activar":
+                
+                activar(request, response);
+                
+                break;
         }
     }
 
@@ -388,5 +394,12 @@ public class InquilinoServlet extends HttpServlet {
             "views/inquilino/reporte.jsp"
     ).forward(request, response);
 }
+    private void activar(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
     
+    int id = Integer.parseInt(request.getParameter("id"));
+    dao.activar(id);
+    
+    response.sendRedirect("inquilino?accion=listar");
+}
 }

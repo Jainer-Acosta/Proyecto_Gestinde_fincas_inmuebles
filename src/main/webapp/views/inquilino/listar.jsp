@@ -21,7 +21,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="${pageContext.request.contextPath}/views/dashboard/dashboard.jsp">
-            <i class="bi bi-building me-2"></i>InmoGest
+            <i class="bi bi-building me-2"></i>PGFI
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -86,8 +86,9 @@
                             List<Inquilino> lista = (List<Inquilino>) request.getAttribute("listaInquilinos");
                             if (lista != null && !lista.isEmpty()) {
                                 for (Inquilino i : lista) {
-                                    String estadoBadge = i.getEstado().equals("ACTIVO") ? "bg-success" : "bg-secondary";
-                                    String estadoIcon = i.getEstado().equals("ACTIVO") ? "check-circle" : "x-circle";
+                                    String estadoActual = i.getEstado();
+                                    String estadoBadge = estadoActual.equals("ACTIVO") ? "bg-success" : "bg-secondary";
+                                    String estadoIcon = estadoActual.equals("ACTIVO") ? "check-circle" : "x-circle";
                         %>
                         <tr>
                             <td class="fw-bold"><%= i.getId()%></td>
@@ -113,20 +114,31 @@
                             <td>
                                 <span class="badge <%= estadoBadge %> px-3 py-2">
                                     <i class="bi bi-<%= estadoIcon %> me-1"></i>
-                                    <%= i.getEstado()%>
+                                    <%= estadoActual %>
                                 </span>
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
+                                    <!-- Botón Editar -->
                                     <a href="${pageContext.request.contextPath}/inquilino?accion=editar&id=<%= i.getId()%>" 
                                        class="btn btn-warning btn-sm">
                                         <i class="bi bi-pencil"></i> Editar
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/inquilino?accion=desactivar&id=<%= i.getId()%>" 
-                                       class="btn btn-danger btn-sm"
-                                       onclick="return confirm('¿Está seguro de desactivar este inquilino?')">
-                                        <i class="bi bi-person-x"></i> Desactivar
-                                    </a>
+                                    
+                                    <!-- Botón Activar/Desactivar según el estado -->
+                                    <% if (estadoActual.equals("ACTIVO")) { %>
+                                        <a href="${pageContext.request.contextPath}/inquilino?accion=desactivar&id=<%= i.getId()%>" 
+                                           class="btn btn-danger btn-sm"
+                                           onclick="return confirm('¿Está seguro de desactivar este inquilino? El inquilino no podrá acceder al sistema ni realizar nuevos alquileres.')">
+                                            <i class="bi bi-person-x"></i> Desactivar
+                                        </a>
+                                    <% } else { %>
+                                        <a href="${pageContext.request.contextPath}/inquilino?accion=activar&id=<%= i.getId()%>" 
+                                           class="btn btn-success btn-sm"
+                                           onclick="return confirm('¿Está seguro de activar este inquilino? El inquilino podrá acceder nuevamente al sistema.')">
+                                            <i class="bi bi-person-check"></i> Activar
+                                        </a>
+                                    <% } %>
                                 </div>
                             </td>
                         </tr>

@@ -23,7 +23,7 @@
         <div class="col-auto col-md-3 col-lg-2 sidebar-dark p-3 p-md-4">
             <div class="d-flex flex-column h-100">
                 <div class="sidebar-heading text-white">
-                    <i class="bi bi-building me-2"></i> InmoGest
+                    <i class="bi bi-building me-2"></i> PGFI
                 </div>
                 
                 <div class="sidebar-nav-scroll">

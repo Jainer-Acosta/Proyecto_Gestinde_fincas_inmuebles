@@ -773,7 +773,15 @@ public Object[] obtenerDetalleRecibo(
             r.setEstado(
                     rs.getString("estado")
             );
-
+            
+             String numeroRecibo = rs.getString("numero_recibo");
+            if (numeroRecibo == null || numeroRecibo.isEmpty()) {
+                numeroRecibo = generarNumeroRecibo(r.getAlquilerId());
+                // Actualizar en la BD
+                actualizarNumeroRecibo(id, numeroRecibo);
+            }
+            r.setNumeroRecibo(numeroRecibo);
+            
             return r;
         }
 
@@ -787,6 +795,19 @@ public Object[] obtenerDetalleRecibo(
 
     return null;
 }
+   
+   public void actualizarNumeroRecibo(int id, String numeroRecibo) {
+    String sql = "UPDATE recibo SET numero_recibo = ? WHERE id = ?";
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sql)) {
+        ps.setString(1, numeroRecibo);
+        ps.setInt(2, id);
+        ps.executeUpdate();
+    } catch (SQLException e) {
+        System.out.println("Error actualizando número recibo: " + e.getMessage());
+    }
+}
+   
     public List<Object[]> filtrarRecibos(String estado, Date inicio, Date fin) {
 
     List<Object[]> lista = new ArrayList<>();
@@ -846,9 +867,22 @@ public Object[] obtenerDetalleRecibo(
     public boolean generarRecibosClonandoMesAnterior() {
     
     String sql = """
-        INSERT INTO recibo (alquiler_id, fecha_emision, renta, agua, luz, iva, porteria, ipc, otros, total, estado)
+        INSERT INTO recibo (alquiler_id, numero_recibo, fecha_emision, renta, agua, luz, iva, porteria, ipc, otros, total, estado)
         SELECT 
             r.alquiler_id,
+            (SELECT CONCAT(
+                UPPER(REPLACE(e.nombre, ' ', '')),
+                '-',
+                UPPER(u.tipo),
+                '-',
+                u.planta, u.letra,
+                '-',
+                LPAD(COALESCE(
+                    (SELECT COUNT(*) + 1 FROM recibo r2 
+                     INNER JOIN alquiler a2 ON r2.alquiler_id = a2.id
+                     INNER JOIN unidad_inmueble u2 ON a2.unidad_inmueble_id = u2.id
+                     WHERE u2.id = u.id), 1), 3, '0')
+            ) AS numero_recibo),
             CURDATE() AS fecha_emision,
             r.renta,
             r.agua,
@@ -860,6 +894,9 @@ public Object[] obtenerDetalleRecibo(
             r.total,
             'PENDIENTE' AS estado
         FROM recibo r
+        INNER JOIN alquiler a ON r.alquiler_id = a.id
+        INNER JOIN unidad_inmueble u ON a.unidad_inmueble_id = u.id
+        INNER JOIN edificio e ON u.edificio_id = e.id
         WHERE r.fecha_emision >= DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%Y-%m-01')
           AND r.fecha_emision < DATE_FORMAT(CURDATE(), '%Y-%m-01')
           AND NOT EXISTS (
@@ -873,22 +910,39 @@ public Object[] obtenerDetalleRecibo(
     try (Connection conexion = Conexion.conectar();
          PreparedStatement ps = conexion.prepareStatement(sql)) {
         
-        return ps.executeUpdate() > 0;
+        int filasAfectadas = ps.executeUpdate();
+        System.out.println("=== CLONACIÓN MES ANTERIOR ===");
+        System.out.println("Recibos clonados: " + filasAfectadas);
+        System.out.println("==============================");
+        
+        return filasAfectadas > 0;
         
     } catch (SQLException e) {
         System.out.println("Error clonando recibos: " + e.getMessage());
+        e.printStackTrace();
         return false;
     }
 }
-    
-    
-    
-    public boolean generarRecibosClonandoMes(int mesOrigen, int anioOrigen, int mesDestino, int anioDestino) {
+
+public boolean generarRecibosClonandoMes(int mesOrigen, int anioOrigen, int mesDestino, int anioDestino) {
     
     String sql = """
-        INSERT INTO recibo (alquiler_id, fecha_emision, renta, agua, luz, iva, porteria, ipc, otros, total, estado)
+        INSERT INTO recibo (alquiler_id, numero_recibo, fecha_emision, renta, agua, luz, iva, porteria, ipc, otros, total, estado)
         SELECT 
             r.alquiler_id,
+            (SELECT CONCAT(
+                UPPER(REPLACE(e.nombre, ' ', '')),
+                '-',
+                UPPER(u.tipo),
+                '-',
+                u.planta, u.letra,
+                '-',
+                LPAD(COALESCE(
+                    (SELECT COUNT(*) + 1 FROM recibo r2 
+                     INNER JOIN alquiler a2 ON r2.alquiler_id = a2.id
+                     INNER JOIN unidad_inmueble u2 ON a2.unidad_inmueble_id = u2.id
+                     WHERE u2.id = u.id), 1), 3, '0')
+            ) AS numero_recibo),
             DATE(CONCAT(?, '-', ?, '-01')) AS fecha_emision,
             r.renta,
             r.agua,
@@ -900,6 +954,9 @@ public Object[] obtenerDetalleRecibo(
             r.total,
             'PENDIENTE' AS estado
         FROM recibo r
+        INNER JOIN alquiler a ON r.alquiler_id = a.id
+        INNER JOIN unidad_inmueble u ON a.unidad_inmueble_id = u.id
+        INNER JOIN edificio e ON u.edificio_id = e.id
         WHERE MONTH(r.fecha_emision) = ? 
           AND YEAR(r.fecha_emision) = ?
           AND NOT EXISTS (

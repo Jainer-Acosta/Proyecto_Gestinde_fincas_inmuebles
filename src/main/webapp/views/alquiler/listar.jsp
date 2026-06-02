@@ -45,11 +45,15 @@
                         <tbody>
                             <%
                                 List<Object[]> lista = (List<Object[]>) request.getAttribute("listaAlquileres");
-                                for (Object[] fila : lista) {
-                                    String estado = fila[9].toString();
+                                if (lista != null && !lista.isEmpty()) {
+                                    for (Object[] fila : lista) {
+                                        // Índices: [0]=idAlquiler, [1]=nombre, [2]=apellido, [3]=edificio, [4]=tipo, [5]=planta, [6]=letra, [7]=fechaInicio, [8]=fechaFin, [9]=estado, [10]=unidadId
+                                        String estado = fila[9].toString();
+                                        int idAlquiler = Integer.parseInt(fila[0].toString());
+                                        int unidadId = Integer.parseInt(fila[10].toString());
                             %>
                             <tr>
-                                <td class="fw-bold">#<%= fila[0]%></td>
+                                <td class="fw-bold">#<%= idAlquiler %></td>
                                 <td>
                                     <i class="bi bi-person-circle me-1 text-secondary"></i>
                                     <%= fila[1]%> <%= fila[2]%>
@@ -59,7 +63,7 @@
                                 <td><%= fila[5]%></td>
                                 <td><%= fila[6]%></td>
                                 <td><%= fila[7]%></td>
-                                <td><%= fila[8]%></td>
+                                <td><%= (fila[8] != null) ? fila[8] : "Vigente" %></td>
                                 <td>
                                     <% if(estado.equals("ACTIVO")){ %>
                                         <span class="badge bg-success fs-6 px-3 py-2">
@@ -73,19 +77,24 @@
                                 </td>
                                 <td>
                                     <% if(estado.equals("ACTIVO")){ %>
-                                        <div class="btn-group" role="group">
-                                            <a class="btn btn-warning btn-sm" 
-                                               href="${pageContext.request.contextPath}/alquiler?accion=finalizar&id=<%= fila[0]%>">
-                                                <i class="bi bi-flag"></i> Finalizar
-                                            </a>
-                                            <a class="btn btn-danger btn-sm" 
-                                               href="${pageContext.request.contextPath}/alquiler?accion=finalizar&id=<%= fila[0] %>&unidadId=<%= fila[5] %>">
-                                                <i class="bi bi-building-x"></i> Desalquilar
-                                            </a>
-                                        </div>
+                                        <a class="btn btn-danger btn-sm" 
+                                           href="${pageContext.request.contextPath}/alquiler?accion=desalquilar&id=<%= idAlquiler %>&unidadId=<%= unidadId %>"
+                                           onclick="return confirm('¿Está seguro de desalquilar esta unidad? La unidad quedará disponible para nuevos alquileres.')">
+                                            <i class="bi bi-building-x"></i> Desalquilar
+                                        </a>
                                     <% } else { %>
-                                        <span class="text-muted">Sin acciones</span>
+                                        <span class="text-muted">Finalizado</span>
                                     <% } %>
+                                </td>
+                            </tr>
+                            <%
+                                    }
+                                } else {
+                            %>
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No hay alquileres registrados
                                 </td>
                             </tr>
                             <% } %>
@@ -95,7 +104,7 @@
             </div>
         </div>
         
-        <!-- Botón volver al dashboard (opcional) -->
+        <!-- Botón volver al dashboard -->
         <div class="mt-4">
             <a href="${pageContext.request.contextPath}/views/dashboard/dashboard.jsp" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard

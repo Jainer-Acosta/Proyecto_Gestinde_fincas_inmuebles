@@ -301,37 +301,6 @@ public class InquilinoDAO {
     return false;
 }
     
-    public boolean desactivar(int id) {
-
-    String sql = """
-        UPDATE inquilino
-        SET estado = 'INACTIVO'
-        WHERE id = ?
-        """;
-
-    try (
-            Connection conexion =
-                    Conexion.conectar();
-
-            PreparedStatement ps =
-                    conexion.prepareStatement(sql)
-    ) {
-
-        ps.setInt(1, id);
-
-        return ps.executeUpdate() > 0;
-
-    } catch (SQLException e) {
-
-        System.out.println(
-                "Error desactivando: "
-                + e.getMessage()
-        );
-    }
-
-    return false;
-}
-    
     public List<Inquilino> listarPorFecha(
         String desde,
         String hasta) {
@@ -421,6 +390,101 @@ public Inquilino buscarPorUsuarioId(int usuarioId) {
     }
     
     return null;
+}
+public boolean desactivar(int id) {
+
+    // Primero obtener el usuario_id del inquilino
+    String sqlGetUsuario = "SELECT usuario_id FROM inquilino WHERE id = ?";
+    int usuarioId = -1;
+    
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sqlGetUsuario)) {
+        
+        ps.setInt(1, id);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            usuarioId = rs.getInt("usuario_id");
+        }
+        
+    } catch (SQLException e) {
+        System.out.println("Error obteniendo usuario_id: " + e.getMessage());
+        return false;
+    }
+    
+    // Actualizar estado del inquilino
+    String sqlUpdateInquilino = """
+        UPDATE inquilino
+        SET estado = 'INACTIVO'
+        WHERE id = ?
+        """;
+    
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sqlUpdateInquilino)) {
+        
+        ps.setInt(1, id);
+        int resultado = ps.executeUpdate();
+        
+        // Si se actualizó el inquilino, actualizar también el usuario
+        if (resultado > 0 && usuarioId != -1) {
+            UsuarioDAO usuarioDAO = new UsuarioDAO();
+            usuarioDAO.desactivar(usuarioId);
+        }
+        
+        return resultado > 0;
+        
+    } catch (SQLException e) {
+        System.out.println("Error desactivando inquilino: " + e.getMessage());
+    }
+    
+    return false;
+}
+
+public boolean activar(int id) {
+
+    // Primero obtener el usuario_id del inquilino
+    String sqlGetUsuario = "SELECT usuario_id FROM inquilino WHERE id = ?";
+    int usuarioId = -1;
+    
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sqlGetUsuario)) {
+        
+        ps.setInt(1, id);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            usuarioId = rs.getInt("usuario_id");
+        }
+        
+    } catch (SQLException e) {
+        System.out.println("Error obteniendo usuario_id: " + e.getMessage());
+        return false;
+    }
+    
+    // Actualizar estado del inquilino
+    String sqlUpdateInquilino = """
+        UPDATE inquilino
+        SET estado = 'ACTIVO'
+        WHERE id = ?
+        """;
+    
+    try (Connection conexion = Conexion.conectar();
+         PreparedStatement ps = conexion.prepareStatement(sqlUpdateInquilino)) {
+        
+        ps.setInt(1, id);
+        int resultado = ps.executeUpdate();
+        
+        // Si se actualizó el inquilino, actualizar también el usuario
+        if (resultado > 0 && usuarioId != -1) {
+            UsuarioDAO usuarioDAO = new UsuarioDAO();
+            usuarioDAO.activar(usuarioId);
+        }
+        
+        return resultado > 0;
+        
+    } catch (SQLException e) {
+        System.out.println("Error activando inquilino: " + e.getMessage());
+    }
+    
+    return false;
 }
     
 }

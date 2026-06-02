@@ -54,7 +54,7 @@
                                     } else if(estado.equals("ALQUILADO")){
                                         estadoBadge = "bg-warning text-dark";
                                         estadoIcon = "house-door";
-                                    } else if(estado.equals("NO_DISPONIBLE")){
+                                    } else if(estado.equals("NO DISPONIBLE")){
                                         estadoBadge = "bg-danger";
                                         estadoIcon = "x-circle";
                                     } else {
